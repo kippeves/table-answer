@@ -117,6 +117,12 @@ export default function DashboardPage() {
               </span>{" "}
               &middot; Max lag: {state.maxTeams}
             </p>
+            <p className="text-sm text-zinc-500 mt-1">
+              Dela denna länk:{" "}
+              <span className="font-mono text-zinc-700">
+                {typeof window !== "undefined" ? window.location.origin : ""}/join
+              </span>
+            </p>
           </div>
           <button
             onClick={closeSession}

@@ -11,12 +11,20 @@ export default function Home() {
           Collaborativ verktyg för undervisning. Skapa en session, dela koden
           med dina studenter, och fyll i tabellen tillsammans.
         </p>
-        <Link
-          href="/create"
-          className="rounded-lg bg-zinc-900 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-zinc-700"
-        >
-          Skapa session
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            href="/create"
+            className="rounded-lg bg-zinc-900 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-zinc-700"
+          >
+            Skapa session
+          </Link>
+          <Link
+            href="/join"
+            className="rounded-lg border border-zinc-300 px-6 py-3 text-base font-medium text-zinc-700 transition-colors hover:bg-zinc-100"
+          >
+            Gå med
+          </Link>
+        </div>
       </main>
     </div>
   );
