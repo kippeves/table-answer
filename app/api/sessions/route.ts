@@ -19,18 +19,28 @@ export async function POST(request: Request) {
 
   const code = generateSessionCode();
 
-  const res = await fetch(`http://${PARTYKIT_HOST}/party/${code}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ type: "init", name, maxTeams }),
-  });
+  try {
+    const res = await fetch(`http://${PARTYKIT_HOST}/party/${code}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, maxTeams }),
+    });
 
-  if (!res.ok) {
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      console.error("PartyKit POST failed:", res.status, text);
+      return NextResponse.json(
+        { error: `Kunde inte skapa session (${res.status})` },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ code });
+  } catch (err) {
+    console.error("PartyKit fetch error:", err);
     return NextResponse.json(
-      { error: "Kunde inte skapa session" },
+      { error: "Kunde inte ansluta till PartyKit" },
       { status: 500 }
     );
   }
-
-  return NextResponse.json({ code });
 }

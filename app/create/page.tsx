@@ -21,7 +21,14 @@ export default function CreatePage() {
       body: JSON.stringify({ name, maxTeams }),
     });
 
-    const data = await res.json();
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      setError("Kunde inte tolka serverns svar");
+      setLoading(false);
+      return;
+    }
 
     if (!res.ok) {
       setError(data.error || "Något gick fel");
