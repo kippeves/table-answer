@@ -15,7 +15,7 @@ const ROOM_ID = "current";
 
 export default function SessionPage() {
   const [state, setState] = useState<SessionState | null>(null);
-  const [localCells, setLocalCells] = useState<Record<CellKey, string>>({});
+  const [localCells, setLocalCells] = useState<Record<string, string>>({});
   const [teamNumber, setTeamNumber] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
     return localStorage.getItem("team");
@@ -29,7 +29,7 @@ export default function SessionPage() {
   const sendTimerRef = useRef<Record<string, ReturnType<typeof setTimeout>>>(
     {}
   );
-  const syncedRef = useRef(false);
+  const serverCellsRef = useRef<Record<string, string>>({});
 
   const socket = usePartySocket({
     host: PARTYKIT_HOST,
@@ -44,8 +44,8 @@ export default function SessionPage() {
 
       if (msg.type === "state") {
         setState(msg.state);
-        if (!syncedRef.current) {
-          syncedRef.current = true;
+        if (teamNumber && msg.state.teams[teamNumber]) {
+          serverCellsRef.current = { ...msg.state.teams[teamNumber].cells };
         }
       }
 
@@ -58,10 +58,16 @@ export default function SessionPage() {
       }
 
       if (msg.type === "cell" && teamNumber === String(msg.teamNumber)) {
-        const key = msg.key as CellKey;
+        const key = msg.key as string;
+        serverCellsRef.current[key] = msg.value;
         setLocalCells((prev) => {
-          if (prev[key] === msg.value) return prev;
-          return { ...prev, [key]: msg.value };
+          if (!(key in prev)) return prev;
+          if (prev[key] === msg.value) {
+            const next = { ...prev };
+            delete next[key];
+            return next;
+          }
+          return prev;
         });
         setState((prev) => {
           if (!prev) return prev;
@@ -125,7 +131,7 @@ export default function SessionPage() {
     setTeamNumber(num);
     localStorage.setItem("team", num);
     setLocalCells({});
-    syncedRef.current = false;
+    serverCellsRef.current = {};
     setShowPicker(false);
   };
 
@@ -240,6 +246,10 @@ export default function SessionPage() {
                       </td>
                       {BOARD_TEMPLATE.columns.map((_, ci) => {
                         const key: CellKey = `${ri}-${ci}`;
+                        const serverVal = myBoard.cells[key] ?? "";
+                        const localVal = localCells[key];
+                        const hasLocal = localVal !== undefined;
+                        const displayValue = hasLocal ? localVal : serverVal;
                         return (
                           <td
                             key={ci}
@@ -247,8 +257,10 @@ export default function SessionPage() {
                           >
                             <input
                               type="text"
-                              value={localCells[key] ?? myBoard.cells[key] ?? ""}
-                              onChange={(e) => handleCellChange(key, e.target.value)}
+                              value={displayValue}
+                              onChange={(e) =>
+                                handleCellChange(key, e.target.value)
+                              }
                               className="w-full px-3 py-3 text-base text-center focus:outline-none focus:ring-2 focus:ring-zinc-400 rounded"
                               placeholder="—"
                             />
