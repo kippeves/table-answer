@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import usePartySocket from "partysocket/react";
 import {
@@ -15,6 +15,7 @@ const ROOM_ID = "current";
 
 export default function SessionPage() {
   const [state, setState] = useState<SessionState | null>(null);
+  const [localCells, setLocalCells] = useState<Record<CellKey, string>>({});
   const [teamNumber, setTeamNumber] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
     return localStorage.getItem("team");
@@ -25,6 +26,10 @@ export default function SessionPage() {
   });
   const [closed, setClosed] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const sendTimerRef = useRef<Record<string, ReturnType<typeof setTimeout>>>(
+    {}
+  );
+  const syncedRef = useRef(false);
 
   const socket = usePartySocket({
     host: PARTYKIT_HOST,
@@ -39,6 +44,9 @@ export default function SessionPage() {
 
       if (msg.type === "state") {
         setState(msg.state);
+        if (!syncedRef.current) {
+          syncedRef.current = true;
+        }
       }
 
       if (msg.type === "error") {
@@ -50,11 +58,16 @@ export default function SessionPage() {
       }
 
       if (msg.type === "cell" && teamNumber === String(msg.teamNumber)) {
+        const key = msg.key as CellKey;
+        setLocalCells((prev) => {
+          if (prev[key] === msg.value) return prev;
+          return { ...prev, [key]: msg.value };
+        });
         setState((prev) => {
           if (!prev) return prev;
           const teams = { ...prev.teams };
           const team = { ...teams[msg.teamNumber] };
-          team.cells = { ...team.cells, [msg.key]: msg.value };
+          team.cells = { ...team.cells, [key]: msg.value };
           teams[msg.teamNumber] = team;
           return { ...prev, teams };
         });
@@ -76,16 +89,29 @@ export default function SessionPage() {
   const sendCell = useCallback(
     (key: CellKey, value: string) => {
       if (!teamNumber) return;
-      socket.send(
-        JSON.stringify({
-          type: "cell",
-          teamNumber: Number(teamNumber),
-          key,
-          value,
-        })
-      );
+      if (sendTimerRef.current[key]) {
+        clearTimeout(sendTimerRef.current[key]);
+      }
+      sendTimerRef.current[key] = setTimeout(() => {
+        socket.send(
+          JSON.stringify({
+            type: "cell",
+            teamNumber: Number(teamNumber),
+            key,
+            value,
+          })
+        );
+      }, 150);
     },
     [socket, teamNumber]
+  );
+
+  const handleCellChange = useCallback(
+    (key: CellKey, value: string) => {
+      setLocalCells((prev) => ({ ...prev, [key]: value }));
+      sendCell(key, value);
+    },
+    [sendCell]
   );
 
   const sendComplete = useCallback(() => {
@@ -98,6 +124,8 @@ export default function SessionPage() {
   const selectTeam = (num: string) => {
     setTeamNumber(num);
     localStorage.setItem("team", num);
+    setLocalCells({});
+    syncedRef.current = false;
     setShowPicker(false);
   };
 
@@ -109,8 +137,9 @@ export default function SessionPage() {
     return (
       <div className="flex flex-col flex-1 items-center justify-center gap-4">
         <h1 className="text-2xl font-bold text-zinc-900">
-          Sessionen hittades inte
+          Ingen aktiv session
         </h1>
+        <p className="text-zinc-500">Vänta på att läraren skapar en session.</p>
         <Link href="/" className="text-sm text-zinc-600 underline">
           Tillbaka till startsidan
         </Link>
@@ -147,9 +176,7 @@ export default function SessionPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-zinc-900">{state.name}</h1>
-            <p className="text-sm text-zinc-500">
-              Lag {teamNumber}
-            </p>
+            <p className="text-sm text-zinc-500">Lag {teamNumber}</p>
           </div>
           <button
             onClick={switchTeam}
@@ -220,8 +247,8 @@ export default function SessionPage() {
                           >
                             <input
                               type="text"
-                              value={myBoard.cells[key] ?? ""}
-                              onChange={(e) => sendCell(key, e.target.value)}
+                              value={localCells[key] ?? myBoard.cells[key] ?? ""}
+                              onChange={(e) => handleCellChange(key, e.target.value)}
                               className="w-full px-3 py-3 text-base text-center focus:outline-none focus:ring-2 focus:ring-zinc-400 rounded"
                               placeholder="—"
                             />
@@ -237,7 +264,7 @@ export default function SessionPage() {
             <div className="flex justify-center">
               {myBoard.completed ? (
                 <span className="text-sm text-green-600 font-medium">
-                  ✓ Klar
+                  Klar
                 </span>
               ) : (
                 <button
