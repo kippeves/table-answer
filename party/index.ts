@@ -11,6 +11,19 @@ export default class Server implements Party.Server {
       (await this.room.storage.get<SessionState>("session")) ?? null;
   }
 
+  async onRequest(request: Party.Request) {
+    if (request.method === "POST") {
+      const body = await request.json<{ name: string; maxTeams: number }>();
+      this.state = createEmptySession(body.name, body.maxTeams);
+      await this.room.storage.put("session", this.state);
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    return new Response("Method not allowed", { status: 405 });
+  }
+
   async onConnect(connection: Party.Connection) {
     if (!this.state) {
       connection.send(
@@ -24,13 +37,6 @@ export default class Server implements Party.Server {
 
   async onMessage(raw: string) {
     const msg = JSON.parse(raw);
-
-    if (msg.type === "init") {
-      this.state = createEmptySession(msg.name, msg.maxTeams);
-      await this.room.storage.put("session", this.state);
-      this.room.broadcast(JSON.stringify({ type: "state", state: this.state }));
-      return;
-    }
 
     if (!this.state) return;
 
