@@ -21,7 +21,12 @@ export default function DashboardPage() {
     host: PARTYKIT_HOST,
     room: code,
     onMessage(event) {
-      const msg = JSON.parse(event.data);
+      let msg;
+      try {
+        msg = JSON.parse(event.data);
+      } catch {
+        return;
+      }
 
       if (msg.type === "state") {
         setState(msg.state);
