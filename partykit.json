@@ -1,0 +1,7 @@
+{
+  "$schema": "https://www.partykit.io/schema.json",
+  "name": "table-answer",
+  "main": "party/index.ts",
+  "parties": {},
+  "compatibilityDate": "2024-11-01"
+}
