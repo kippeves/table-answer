@@ -210,13 +210,13 @@ export default function SessionPage() {
                         return (
                           <td
                             key={ci}
-                            className="border border-zinc-300 p-1"
+                            className="border border-zinc-300 p-1.5"
                           >
                             <input
                               type="text"
                               value={myBoard.cells[key] ?? ""}
                               onChange={(e) => sendCell(key, e.target.value)}
-                              className="w-full px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-zinc-400 rounded"
+                              className="w-full px-3 py-3 text-base text-center focus:outline-none focus:ring-2 focus:ring-zinc-400 rounded"
                               placeholder="—"
                             />
                           </td>
