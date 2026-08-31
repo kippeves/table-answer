@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useParams } from "next/navigation";
 import Link from "next/link";
 import usePartySocket from "partysocket/react";
 import {
@@ -12,26 +11,24 @@ import {
 
 const PARTYKIT_HOST =
   process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "127.0.0.1:1999";
+const ROOM_ID = "current";
 
 export default function SessionPage() {
-  const params = useParams();
-  const code = params.code as string;
-
   const [state, setState] = useState<SessionState | null>(null);
   const [teamNumber, setTeamNumber] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
-    return localStorage.getItem(`team-${code}`);
+    return localStorage.getItem("team");
   });
   const [showPicker, setShowPicker] = useState(() => {
     if (typeof window === "undefined") return true;
-    return !localStorage.getItem(`team-${code}`);
+    return !localStorage.getItem("team");
   });
   const [closed, setClosed] = useState(false);
   const [notFound, setNotFound] = useState(false);
 
   const socket = usePartySocket({
     host: PARTYKIT_HOST,
-    room: code,
+    room: ROOM_ID,
     onMessage(event) {
       let msg;
       try {
@@ -100,7 +97,7 @@ export default function SessionPage() {
 
   const selectTeam = (num: string) => {
     setTeamNumber(num);
-    localStorage.setItem(`team-${code}`, num);
+    localStorage.setItem("team", num);
     setShowPicker(false);
   };
 
@@ -151,7 +148,7 @@ export default function SessionPage() {
           <div>
             <h1 className="text-2xl font-bold text-zinc-900">{state.name}</h1>
             <p className="text-sm text-zinc-500">
-              Lag {teamNumber} &middot; Kodd: {code}
+              Lag {teamNumber}
             </p>
           </div>
           <button

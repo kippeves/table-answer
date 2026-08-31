@@ -8,8 +8,8 @@ export default function Home() {
           Table Answer
         </h1>
         <p className="text-lg text-zinc-600 leading-relaxed">
-          Collaborativ verktyg för undervisning. Skapa en session, dela koden
-          med dina studenter, och fyll i tabellen tillsammans.
+          Collaborativ verktyg för undervisning. Skapa en session och fyll i
+          tabellen tillsammans.
         </p>
         <div className="flex gap-3">
           <Link
@@ -19,7 +19,7 @@ export default function Home() {
             Skapa session
           </Link>
           <Link
-            href="/join"
+            href="/session"
             className="rounded-lg border border-zinc-300 px-6 py-3 text-base font-medium text-zinc-700 transition-colors hover:bg-zinc-100"
           >
             Gå med

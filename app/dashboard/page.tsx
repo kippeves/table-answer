@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useParams } from "next/navigation";
 import Link from "next/link";
 import usePartySocket from "partysocket/react";
 import {
@@ -12,11 +11,9 @@ import {
 
 const PARTYKIT_HOST =
   process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "127.0.0.1:1999";
+const ROOM_ID = "current";
 
 export default function DashboardPage() {
-  const params = useParams();
-  const code = params.code as string;
-
   const [state, setState] = useState<SessionState | null>(null);
   const [closed, setClosed] = useState(false);
   const [notFound, setNotFound] = useState(false);
@@ -24,7 +21,7 @@ export default function DashboardPage() {
 
   const socket = usePartySocket({
     host: PARTYKIT_HOST,
-    room: code,
+    room: ROOM_ID,
     onMessage(event) {
       let msg;
       try {
@@ -111,17 +108,7 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-2xl font-bold text-zinc-900">{state.name}</h1>
             <p className="text-sm text-zinc-500">
-              Kodd:{" "}
-              <span className="font-mono font-semibold text-zinc-700">
-                {code}
-              </span>{" "}
-              &middot; Max lag: {state.maxTeams}
-            </p>
-            <p className="text-sm text-zinc-500 mt-1">
-              Dela denna länk:{" "}
-              <span className="font-mono text-zinc-700">
-                {typeof window !== "undefined" ? window.location.origin : ""}/join
-              </span>
+              Max lag: {state.maxTeams}
             </p>
           </div>
           <button

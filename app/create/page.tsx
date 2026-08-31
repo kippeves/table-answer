@@ -36,7 +36,7 @@ export default function CreatePage() {
       return;
     }
 
-    router.push(`/dashboard/${data.code}`);
+    router.push("/dashboard");
   }
 
   return (

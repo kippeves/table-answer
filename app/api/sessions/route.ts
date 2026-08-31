@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { generateSessionCode } from "@/lib/session-code";
 
 const PARTYKIT_HOST =
   process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "127.0.0.1:1999";
+const ROOM_ID = "current";
 
 function partykitUrl(path: string): string {
   const host = PARTYKIT_HOST.startsWith("http")
@@ -24,10 +24,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const code = generateSessionCode();
-
   try {
-    const res = await fetch(partykitUrl(`/party/${code}`), {
+    const res = await fetch(partykitUrl(`/party/${ROOM_ID}`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, maxTeams }),
@@ -42,7 +40,7 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ code });
+    return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("PartyKit fetch error:", err);
     return NextResponse.json(
