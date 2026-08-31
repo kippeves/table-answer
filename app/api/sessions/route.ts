@@ -4,6 +4,13 @@ import { generateSessionCode } from "@/lib/session-code";
 const PARTYKIT_HOST =
   process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "127.0.0.1:1999";
 
+function partykitUrl(path: string): string {
+  const host = PARTYKIT_HOST.startsWith("http")
+    ? PARTYKIT_HOST
+    : `http://${PARTYKIT_HOST}`;
+  return `${host}${path}`;
+}
+
 export async function POST(request: Request) {
   const { name, maxTeams } = await request.json();
 
@@ -20,7 +27,7 @@ export async function POST(request: Request) {
   const code = generateSessionCode();
 
   try {
-    const res = await fetch(`http://${PARTYKIT_HOST}/party/${code}`, {
+    const res = await fetch(partykitUrl(`/party/${code}`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, maxTeams }),
