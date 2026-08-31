@@ -161,9 +161,10 @@ export default function DashboardPage() {
                     <th className="border border-zinc-300 bg-zinc-100 px-4 py-3 text-left text-sm font-semibold text-zinc-700">
                       Fråga
                     </th>
-                    {BOARD_TEMPLATE.columns.map((col) => (
+                    {BOARD_TEMPLATE.columns.map((col, ci) => (
                       <th
                         key={col}
+                        title={BOARD_TEMPLATE.columnTooltips[ci]}
                         className="border border-zinc-300 bg-zinc-100 px-4 py-3 text-center text-sm font-semibold text-zinc-700"
                       >
                         {col}
@@ -174,7 +175,10 @@ export default function DashboardPage() {
                 <tbody>
                   {BOARD_TEMPLATE.rows.map((row, ri) => (
                     <tr key={ri}>
-                      <td className="border border-zinc-300 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-700 whitespace-nowrap">
+                      <td
+                        title={BOARD_TEMPLATE.rowTooltips[ri]}
+                        className="border border-zinc-300 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-700 whitespace-nowrap"
+                      >
                         {row}
                       </td>
                       {BOARD_TEMPLATE.columns.map((_, ci) => {
